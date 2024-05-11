@@ -1,3 +1,3 @@
-use albion_db;
-SELECT * from users;
+USE albion_db;
+SELECT * FROM users;
 
