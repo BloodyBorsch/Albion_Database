@@ -8,7 +8,17 @@ class View:
 
     def __init__(self, db: DB):
         self.data = db
+        self.create_main_window()
+        self.create_buttons()        
+        self.create_input_fields()        
 
+        self.root.update() 
+        self.root.mainloop()
+
+    def click_button(self):
+        self.data.select_all_data()        
+
+    def create_main_window(self):
         self.root = Tk()
         self.root.title("Albion Database")
         self.icon = PhotoImage(
@@ -18,15 +28,11 @@ class View:
         self.root.geometry("800x500+400+150")  # print(root.geometry())
         self.root.resizable(False, False)
 
+    def create_buttons(self):
         self.btn = ttk.Button(text="Click Me", command=self.click_button)        
         self.btn["text"] = "Тест"
         self.btn.pack()
 
-        self.root.update()
-
-        print_info(self.btn)
-
-        self.root.mainloop()
-
-    def click_button(self):
-        self.data.select_all_data()
+    def create_input_fields(self):
+        self.input_field = ttk.Entry()
+        self.input_field.pack(anchor=NW, padx=8, pady= 8)
