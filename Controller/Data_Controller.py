@@ -13,8 +13,7 @@ class DB:
             " name varchar(32),"
             " password varchar(32),"
             " email varchar(32), PRIMARY KEY (id));"
-        )
-        print("Table creation succeed")
+        )        
 
     def select_all_data(self):
         self.cursor.execute("SELECT * FROM users;")

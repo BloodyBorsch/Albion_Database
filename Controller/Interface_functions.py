@@ -1,3 +1,5 @@
+from tkinter import *
+from tkinter import ttk
 from Data_Controller import DB
 
 
