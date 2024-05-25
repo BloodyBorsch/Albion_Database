@@ -9,7 +9,40 @@ class Flet_View:
     def __init__(self, db: DB):
         self.data = db
         self.tables_list = list()
-        ft.app(self.show_tables)
+        ft.app(self.create_data)
+
+    def create_data(self, page: ft.Page):
+        page.title = "Main FLET application"
+
+        def add_clicked(e):
+            data_tuple = tuple()
+            data_tuple = (
+                name_data.value,
+                tier.value,
+                price1.value,
+                price2.value,
+                price3.value,
+                count.value,
+            )
+            print(data_tuple)
+            self.data.insert_data(data_tuple)
+
+        name_data = ft.TextField(hint_text="Enter name of item", width=300)
+        tier = ft.TextField(hint_text="Enter Tier", width=300)
+        price1 = ft.TextField(hint_text="Enter start price", width=300)
+        price2 = ft.TextField(hint_text="Enter price lvl 2", width=300)
+        price3 = ft.TextField(hint_text="Enter price lvl 3", width=300)
+        count = ft.TextField(hint_text="Enter runes count", width=300)
+
+        page.add(
+            ft.Row(
+                [
+                    name_data,
+                    ft.ElevatedButton("Insert data", on_click=add_clicked),
+                ]
+            )
+        )
+        page.add(tier, price1, price2, price3, count)
 
     def show_tables(self, page: ft.Page):
         page.title = "Main FLET application"
@@ -22,11 +55,9 @@ class Flet_View:
                 width=100,
                 options=[ft.dropdown.Option(x) for x in self.tables_list],
             )
-            page.add(tables_dropdown) 
+            page.add(tables_dropdown)
 
         page.add(ft.Row([ft.ElevatedButton("Show Tables", on_click=show)]))
-
-               
 
     def first_test(self, page: ft.Page):
         page.title = "Flet counter example"
@@ -101,17 +132,17 @@ class Flet_View:
 
         ### TEXT
 
-        # def btn_click(e):
-        #     if not txt_name.value:
-        #         txt_name.error_text = "Please enter your name"
-        #         page.update()
-        #     else:
-        #         name = txt_name.value
-        #         page.clean()
-        #         page.add(ft.Text(f"Hello, {name}!"))
+        def btn_click(e):
+            if not txt_name.value:
+                txt_name.error_text = "Please enter your name"
+                page.update()
+            else:
+                name = txt_name.value
+                page.clean()
+                page.add(ft.Text(f"Hello, {name}!"))
 
-        # txt_name = ft.TextField(label="Your name")
-        # page.add(txt_name, ft.ElevatedButton("Say hello!", on_click=btn_click))
+        txt_name = ft.TextField(label="Your name")
+        page.add(txt_name, ft.ElevatedButton("Say hello!", on_click=btn_click))
 
         ### CHECKBOX
 
@@ -127,18 +158,18 @@ class Flet_View:
 
         ### DROPDOWN
 
-        def button_clicked(e):
-            output_text.value = f"Dropdown value is:  {color_dropdown.value}"
-            page.update()
+        # def button_clicked(e):
+        #     output_text.value = f"Dropdown value is:  {color_dropdown.value}"
+        #     page.update()
 
-        output_text = ft.Text()
-        submit_btn = ft.ElevatedButton(text="Submit", on_click=button_clicked)
-        color_dropdown = ft.Dropdown(
-            width=100,
-            options=[
-                ft.dropdown.Option("Red"),
-                ft.dropdown.Option("Green"),
-                ft.dropdown.Option("Blue"),
-            ],
-        )
-        page.add(color_dropdown, submit_btn, output_text)
+        # output_text = ft.Text()
+        # submit_btn = ft.ElevatedButton(text="Submit", on_click=button_clicked)
+        # color_dropdown = ft.Dropdown(
+        #     width=100,
+        #     options=[
+        #         ft.dropdown.Option("Red"),
+        #         ft.dropdown.Option("Green"),
+        #         ft.dropdown.Option("Blue"),
+        #     ],
+        # )
+        # page.add(color_dropdown, submit_btn, output_text)

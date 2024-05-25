@@ -1,12 +1,18 @@
 USE albion_db;
-CREATE TABLE IF NOT EXISTS users (id int AUTO_INCREMENT,
-            name varchar(32),
-            password varchar(32),
-            email varchar(32), PRIMARY KEY (id));
-CREATE TABLE IF NOT EXISTS resources (id int AUTO_INCREMENT,
-            name varchar(32),
-            tier varchar(32),
-            cost varchar(32), PRIMARY KEY (id));
+CREATE TABLE IF NOT EXISTS runes (
+			id int PRIMARY KEY AUTO_INCREMENT,
+            rune_name varchar(32),
+            Tier4_price int,
+            Tier5_price int, 
+            Tier6_price int);
+CREATE TABLE IF NOT EXISTS items (
+			id int PRIMARY KEY AUTO_INCREMENT,
+            item_name varchar(32),
+            Tier int,
+            Start_price int, 
+            Price_2 int,
+            Price_3 int,
+            Runes_count int);
 SHOW TABLES;
-SELECT * FROM users;
-
+SELECT * FROM runes;
+UPDATE runes SET Tier6_price = 2850 WHERE id = 3;

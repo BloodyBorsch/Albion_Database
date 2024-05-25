@@ -22,32 +22,24 @@ class DB:
         print("#" * 20)
 
     def get_tables(self):
-        self.cursor.execute("SHOW TABLES;")        
-        dirty_list = self.cursor.fetchall()  
+        self.cursor.execute("SHOW TABLES;")
+        dirty_list = self.cursor.fetchall()
 
-        [print(x) for x in dirty_list]
-        
-        clean_list = list()     
-        
+        clean_list = list()
+
         for x in dirty_list:
             for key, val in x.items():
-                #print(val)
+                # print(val)
                 clean_list.append(str(val).title())
-        
+
         return clean_list
 
         # print(str(*self.cursor.fetchall()).title())
         # return str(self.cursor.fetchall()).title()
 
-    def insert_data(self, product, price, comment):
-        self.cursor.execute(
-            "INSERT INTO buy VALUES (NULL,?,?,?);",
-            (
-                product,
-                price,
-                comment,
-            ),
-        )
+    def insert_data(self, data_tuple):
+        sql_insert_command = "INSERT INTO items (item_name, Tier, Start_price, Price_2, Price_3, Runes_count) VALUES (?,?,?,?,?,?);"        
+        self.cursor.execute(sql_insert_command, data_tuple)
         self.connection.commit()
         print("Insert data succeed")
 
