@@ -12,13 +12,21 @@ class Flet_View:
         ft.app(self.show_tables)
 
     def show_tables(self, page: ft.Page):
-        page.title = "Main FLET application"        
+        page.title = "Main FLET application"
 
         def show(e):
             self.tables_list = self.data.get_tables()
-            [page.add(ft.Text(x)) for x in self.tables_list]                
-        
-        page.add(ft.Row([ft.ElevatedButton("Show Tables", on_click=show)]))    
+            [page.add(ft.Text(x)) for x in self.tables_list]
+
+            tables_dropdown = ft.Dropdown(
+                width=100,
+                options=[ft.dropdown.Option(x) for x in self.tables_list],
+            )
+            page.add(tables_dropdown) 
+
+        page.add(ft.Row([ft.ElevatedButton("Show Tables", on_click=show)]))
+
+               
 
     def first_test(self, page: ft.Page):
         page.title = "Flet counter example"
@@ -70,7 +78,7 @@ class Flet_View:
         #         page.controls.pop(0)
         #     page.update()
         #     time.sleep(0.3)
-        
+
         # self.t = ft.Text()
         # page.add(self.t)
 
@@ -79,7 +87,7 @@ class Flet_View:
         #         ft.TextField(label="Your name"),
         #         ft.ElevatedButton(text="Say my name!")
         #     ])
-        #)
+        # )
 
         # for i in range(10):
         #     self.t.value = f"Step {i}"
