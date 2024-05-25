@@ -13,13 +13,28 @@ class DB:
             " name varchar(32),"
             " password varchar(32),"
             " email varchar(32), PRIMARY KEY (id));"
-        )        
+        )
 
     def select_all_data(self):
         self.cursor.execute("SELECT * FROM users;")
         rows = self.cursor.fetchall()
         [print(x) for x in rows]
         print("#" * 20)
+
+    def get_tables(self):
+        self.cursor.execute("SHOW TABLES;")        
+        dirty_list = self.cursor.fetchall()  
+        clean_list = list()     
+        
+        for x in dirty_list:
+            for key, val in x.items():
+                #print(val)
+                clean_list.append(str(val).title())
+        
+        return clean_list
+
+        # print(str(*self.cursor.fetchall()).title())
+        # return str(self.cursor.fetchall()).title()
 
     def insert_data(self, product, price, comment):
         self.cursor.execute(

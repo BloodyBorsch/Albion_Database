@@ -24,6 +24,7 @@ if __name__ == "__main__":
         try:
             cursor = connection.cursor()
             db = DB(connection)
+            #db.show_all_tables()
             interface = Flet_View(db)
         finally:
             connection.close()
