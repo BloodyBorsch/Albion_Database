@@ -1,5 +1,5 @@
 import pymysql
-from Interface import View
+from Flet_Interface import Flet_View
 from Data_Controller import DB
 from config import host_sql, user_sql, password_sql, db_name_sql
 
@@ -24,7 +24,7 @@ if __name__ == "__main__":
         try:
             cursor = connection.cursor()
             db = DB(connection)
-            interface = View(db)
+            interface = Flet_View(db)
         finally:
             connection.close()
             print("Connection closed ...")

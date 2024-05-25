@@ -18,4 +18,3 @@ def print_info(widget, depth=0):
 
 def add_command(db: DB):
     db.insert_data(product_text.get(), price_text.get(), comment_text.get()) 
-    

@@ -5,7 +5,7 @@ from Data_Controller import DB
 from Interface_functions import print_info
 
 
-class View:
+class Tkinter_View:
 
     def __init__(self, db: DB):
         self.menu_type = Menu_types.empty
