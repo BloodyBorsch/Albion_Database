@@ -24,6 +24,9 @@ class DB:
     def get_tables(self):
         self.cursor.execute("SHOW TABLES;")        
         dirty_list = self.cursor.fetchall()  
+
+        [print(x) for x in dirty_list]
+        
         clean_list = list()     
         
         for x in dirty_list:
