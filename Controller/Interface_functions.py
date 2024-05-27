@@ -1,6 +1,6 @@
 from tkinter import *
 from tkinter import ttk
-from Data_Controller import DB
+from Data_Controller import Data_Base
 
 
 def print_info(widget, depth=0):
@@ -16,5 +16,5 @@ def print_info(widget, depth=0):
     for child in widget.winfo_children():
         print_info(child, depth + 1)
 
-def add_command(db: DB):
-    db.insert_data(product_text.get(), price_text.get(), comment_text.get()) 
+def clear_table():
+    pass

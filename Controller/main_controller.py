@@ -1,6 +1,6 @@
 import pymysql
-from Flet_Interface import Flet_View
-from Data_Controller import DB
+from Flet_Interface import Data_Table
+from Data_Controller import Data_Base
 from config import host_sql, user_sql, password_sql, db_name_sql
 
 
@@ -23,9 +23,9 @@ if __name__ == "__main__":
 
         try:
             cursor = connection.cursor()
-            db = DB(connection)
+            db = Data_Base(connection)
             #db.show_all_tables()
-            interface = Flet_View(db)
+            interface = Data_Table(db)
         finally:
             connection.close()
             print("Connection closed ...")

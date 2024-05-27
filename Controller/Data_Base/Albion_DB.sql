@@ -14,5 +14,5 @@ CREATE TABLE IF NOT EXISTS items (
             Price_3 int,
             Runes_count int);
 SHOW TABLES;
-SELECT * FROM runes;
-UPDATE runes SET Tier6_price = 2850 WHERE id = 3;
+SHOW COLUMNS FROM items;
+SELECT * FROM items;

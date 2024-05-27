@@ -1,12 +1,12 @@
 import pymysql
 
 
-class DB:
+class Data_Base:
 
     def __init__(self, connector: pymysql.connections.Connection):
         self.connection = connector
         self.cursor = connector.cursor()
-
+        
     def create_table(self):
         self.cursor.execute(
             "CREATE TABLE IF NOT EXISTS users (id int AUTO_INCREMENT,"
@@ -16,10 +16,10 @@ class DB:
         )
 
     def select_all_data(self):
-        self.cursor.execute("SELECT * FROM users;")
-        rows = self.cursor.fetchall()
-        [print(x) for x in rows]
-        print("#" * 20)
+        self.cursor.execute("SELECT * FROM items;")
+        result = self.cursor.fetchall()
+        return result
+
 
     def get_tables(self):
         self.cursor.execute("SHOW TABLES;")
@@ -29,19 +29,15 @@ class DB:
 
         for x in dirty_list:
             for key, val in x.items():
-                # print(val)
                 clean_list.append(str(val).title())
 
         return clean_list
 
-        # print(str(*self.cursor.fetchall()).title())
-        # return str(self.cursor.fetchall()).title()
-
     def insert_data(self, data_tuple):
-        sql_insert_command = "INSERT INTO items (item_name, Tier, Start_price, Price_2, Price_3, Runes_count) VALUES (?,?,?,?,?,?);"        
+        sql_insert_command = "INSERT INTO items (item_name, Tier, Start_price, Price_2, Price_3, Runes_count) VALUES (%s,%s,%s,%s,%s,%s);"        
         self.cursor.execute(sql_insert_command, data_tuple)
         self.connection.commit()
-        print("Insert data succeed")
+        print(self.cursor.rowcount, "Insert data succeed")
 
     def update_data(self, id, product, price):
         self.cursor.execute(

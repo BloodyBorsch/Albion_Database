@@ -1,13 +1,13 @@
 from tkinter import *
 from tkinter import ttk
 from enum import Enum
-from Data_Controller import DB
+from Data_Controller import Data_Base
 from Interface_functions import print_info
 
 
 class Tkinter_View:
 
-    def __init__(self, db: DB):
+    def __init__(self, db: Data_Base):
         self.menu_type = Menu_types.empty
         self.grid_size = 20
         self.data = db
@@ -71,7 +71,7 @@ class Tkinter_View:
 
 class Create_table_menu:
 
-    def __init__(self, db: DB):
+    def __init__(self, db: Data_Base):
         self.grid_size = 8
         self.data = db
 
