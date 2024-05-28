@@ -23,9 +23,8 @@ if __name__ == "__main__":
 
         try:
             cursor = connection.cursor()
-            db = Data_Base(connection)
-            #db.show_all_tables()
-            interface = Data_Table(db)
+            sql_data = Data_Base(connection)
+            interface = Data_Table(sql_data)
         finally:
             connection.close()
             print("Connection closed ...")

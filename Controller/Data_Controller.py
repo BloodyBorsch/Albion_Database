@@ -34,15 +34,15 @@ class Data_Base:
 
         return clean_list
 
-    def insert_data(self, data_tuple):
+    def insert_data(self, inserted_data):
         sql_insert_command = "INSERT INTO items (item_name, Tier, Start_price, Price_2, Price_3, Runes_count) VALUES (%s,%s,%s,%s,%s,%s);"        
-        self.cursor.execute(sql_insert_command, data_tuple)
+        self.cursor.execute(sql_insert_command, [x.value for x in inserted_data])
         self.connection.commit()
         print(self.cursor.rowcount, "Insert data succeed")
 
-    def update_data(self, name, tier, start_p, p_2, p_3, count, id):
+    def update_data(self, name, tier, price_s, price_2, price_3, count, id):
         sql = "UPDATE items SET item_name = %s, Tier = %s, Start_price = %s, Price_2 = %s, Price_3 = %s, Runes_count = %s WHERE id = %s;"
-        val = (name, tier, start_p, p_2, p_3, count, id)
+        val = (name, tier, price_s, price_2, price_3, count, id)
         self.cursor.execute(sql, val)
         self.connection.commit()        
 
