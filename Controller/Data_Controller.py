@@ -6,6 +6,7 @@ class Data_Base:
     def __init__(self, connector: pymysql.connections.Connection):
         self.connection = connector
         self.cursor = connector.cursor()
+        self.fetch_number = 10
         
     def create_table(self):
         self.cursor.execute(
@@ -17,7 +18,7 @@ class Data_Base:
 
     def select_all_data(self):
         self.cursor.execute("SELECT * FROM items;")
-        result = self.cursor.fetchall()
+        result = self.cursor.fetchmany(self.fetch_number)
         return result
 
 
@@ -39,19 +40,16 @@ class Data_Base:
         self.connection.commit()
         print(self.cursor.rowcount, "Insert data succeed")
 
-    def update_data(self, id, product, price):
-        self.cursor.execute(
-            "UPDATE buy SET product=?, price=? WHERE id=?;",
-            (
-                product,
-                price,
-                id,
-            ),
-        )
-        self.connection.commit()
+    def update_data(self, name, tier, start_p, p_2, p_3, count, id):
+        sql = "UPDATE items SET item_name = %s, Tier = %s, Start_price = %s, Price_2 = %s, Price_3 = %s, Runes_count = %s WHERE id = %s;"
+        val = (name, tier, start_p, p_2, p_3, count, id)
+        self.cursor.execute(sql, val)
+        self.connection.commit()        
 
     def delete_data(self, id):
-        self.cursor.execute("DELETE FROM buy WHERE id=?;", (id,))
+        sql = "DELETE FROM items WHERE id = %s;"
+        val = (id)
+        self.cursor.execute(sql, val)
         self.connection.commit()
 
     def search_data(self, product="", price=""):

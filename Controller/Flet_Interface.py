@@ -14,9 +14,9 @@ class Data_Table:
     def create_table(self, page: ft.Page):
         page.title = "Main FLET application"
 
-        def add_clicked(e):  
+        def add_clicked(e):
             try:
-                data_tuple = tuple()      
+                data_tuple = tuple()
                 data_tuple = (
                     name_data.value,
                     tier.value,
@@ -24,21 +24,20 @@ class Data_Table:
                     price2.value,
                     price3.value,
                     count.value,
-                )            
+                )
                 self.data.insert_data(data_tuple)
                 self.data_table.rows.clear()
                 self.get_data(page)
 
                 page.snack_bar = ft.SnackBar(
-                    ft.Text("Sucess added", size=30),
-                    bgcolor="green"
+                    ft.Text("Sucess added", size=30), bgcolor="green"
                 )
                 page.snack_bar.open = True
                 page.update()
             except Exception as e:
                 print(e)
                 print(f"Got error!")
-            
+
             name_data.value = ""
             tier.value = ""
             price1.value = ""
@@ -47,13 +46,76 @@ class Data_Table:
             count.value = ""
             page.update()
 
-
         name_data = ft.TextField(hint_text="Enter name of item", width=300)
         tier = ft.TextField(hint_text="Enter Tier", width=300)
         price1 = ft.TextField(hint_text="Enter start price", width=300)
         price2 = ft.TextField(hint_text="Enter price lvl 2", width=300)
         price3 = ft.TextField(hint_text="Enter price lvl 3", width=300)
         count = ft.TextField(hint_text="Enter runes count", width=300)
+
+        # EDIT FIELD
+
+        self.edit_id = ft.TextField(hint_text="ID", width=300)
+        self.edit_name_data = ft.TextField(hint_text="Enter name of item", width=300)
+        self.edit_tier = ft.TextField(hint_text="Enter Tier", width=300)
+        self.edit_price1 = ft.TextField(hint_text="Enter start price", width=300)
+        self.edit_price2 = ft.TextField(hint_text="Enter price lvl 2", width=300)
+        self.edit_price3 = ft.TextField(hint_text="Enter price lvl 3", width=300)
+        self.edit_count = ft.TextField(hint_text="Enter runes count", width=300)
+
+        self.data_for_items = tuple()
+
+        def save_data(e):
+            try:
+                self.data.update_data(self.edit_name_data.value,
+                self.edit_tier.value,
+                self.edit_price1.value,
+                self.edit_price2.value,
+                self.edit_price3.value,
+                self.edit_count.value, 
+                self.edit_id.value)
+
+                print("Selected id edited")
+                self.pop_up_menu.open = False
+                page.update()
+
+                self.edit_id.value = ""
+                self.edit_name_data.value = ""
+                self.edit_tier.value = ""
+                self.edit_price1.value = ""
+                self.edit_price2.value = ""
+                self.edit_price3.value = ""
+                self.edit_count.value = ""
+
+                self.data_table.rows.clear()
+                self.get_data(page)
+
+                page.snack_bar = ft.SnackBar(
+                    ft.Text("Sucess edited", size=30), bgcolor="green"
+                )
+                page.snack_bar.open = True
+
+                page.update()
+
+            except Exception as e:
+                print(e)
+                print("Got error!")
+
+        self.pop_up_menu = ft.AlertDialog(
+            title=ft.Text("Edit menu"),
+            content=ft.Column(
+                [
+                    self.edit_id,
+                    self.edit_name_data,
+                    self.edit_tier,
+                    self.edit_price1,
+                    self.edit_price2,
+                    self.edit_price3,
+                    self.edit_count,
+                ]
+            ),
+            actions=[ft.TextButton("Save", on_click=save_data)],
+        )
 
         self.data_table = ft.DataTable(
             columns=[
@@ -65,31 +127,32 @@ class Data_Table:
                 ft.DataColumn(ft.Text("Price lvl 3")),
                 ft.DataColumn(ft.Text("Runes count")),
                 ft.DataColumn(ft.Text("Actions")),
-
             ],
-            rows=[]
+            rows=[],
         )
 
         first_row = ft.Row(
             [
                 name_data,
-                ft.ElevatedButton("Insert data", on_click=add_clicked),
-                #self.data_table,
+                ft.ElevatedButton("Insert data", on_click=add_clicked),                
             ]
         )
 
-        page.add(ft.Column(
-            [
-                first_row,
-                tier,
-                price1,
-                price2,
-                price3,
-                count,
-                self.data_table               
-            ]
-        ))  
-        self.get_data(page)      
+        page.add(
+            ft.Column(
+                [
+                    first_row,
+                    tier,
+                    price1,
+                    price2,
+                    price3,
+                    count,
+                    self.data_table,  ## TODO
+                ]
+            ),
+            self.pop_up_menu 
+        )
+        self.get_data(page)
 
     def show_tables(self, page: ft.Page):
         page.title = "Main FLET application"
@@ -106,14 +169,38 @@ class Data_Table:
 
         page.add(ft.Row([ft.ElevatedButton("Show Tables", on_click=show)]))
 
-    def get_data(self, page: ft.Page):        
-        rows = self.data.select_all_data()         
-       
-        def delete_command(e):
-            pass
+    def get_data(self, page: ft.Page):
+        rows = self.data.select_all_data()
 
-        def edit_command(e):
-            pass
+        def delete_command(e):
+            print("Selected id is = ", e.control.data["id"])
+            try:
+                self.data.delete_data(e.control.data["id"])
+                print("Selected id deleted")
+
+                self.data_table.rows.clear()
+                self.get_data(page)
+
+                page.snack_bar = ft.SnackBar(
+                    ft.Text("Sucess deleted", size=30), bgcolor="green"
+                )
+                page.snack_bar.open = True
+                page.update()
+            except Exception as e:
+                print(e)
+                print("Got error!")
+
+        def edit_command(e): 
+            self.edit_id.value = e.control.data["id"]
+            self.edit_name_data.value = e.control.data["item_name"]
+            self.edit_tier.value = e.control.data["Tier"]
+            self.edit_price1.value = e.control.data["Start_price"]
+            self.edit_price2.value = e.control.data["Price_2"]
+            self.edit_price3.value = e.control.data["Price_3"]
+            self.edit_count.value = e.control.data["Runes_count"]
+                        
+            self.pop_up_menu.open = True
+            page.update()
 
         for row in rows:
             self.data_table.rows.append(
@@ -129,22 +216,27 @@ class Data_Table:
                         ft.DataCell(
                             ft.Row(
                                 [
-                                    ft.IconButton("delete", icon_color="red",
-                                                  data=row,
-                                                  on_click=delete_command),
-                                    ft.IconButton("edit", icon_color="green",
-                                                  data=row,
-                                                  on_click=edit_command),
+                                    ft.IconButton(
+                                        "delete",
+                                        icon_color="red",
+                                        data=row,
+                                        on_click=delete_command,
+                                    ),
+                                    ft.IconButton(
+                                        "edit",
+                                        icon_color="green",
+                                        data=row,
+                                        on_click=edit_command,
+                                    ),
                                 ]
                             )
-                        )
+                        ),
                     ]
                 )
             )
 
         page.update()
         print(f"Page updated")
-            
 
     def first_test(self, page: ft.Page):
         page.title = "Flet counter example"
