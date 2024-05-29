@@ -67,7 +67,7 @@ class Data_Table_OLD:
 
         def save_data(e):
             try:
-                self.data.update_data(self.edit_name_data.value,
+                self.data.update_items_data(self.edit_name_data.value,
                 self.edit_tier.value,
                 self.edit_price1.value,
                 self.edit_price2.value,
@@ -170,7 +170,7 @@ class Data_Table_OLD:
         page.add(ft.Row([ft.ElevatedButton("Show Tables", on_click=show)]))
 
     def get_data(self, page: ft.Page):
-        rows = self.data.select_all_data()
+        rows = self.data.select_from_items()
 
         def delete_command(e):
             print("Selected id is = ", e.control.data["id"])
