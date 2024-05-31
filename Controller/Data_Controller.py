@@ -16,6 +16,13 @@ class SQL_Base:
             " email varchar(32), PRIMARY KEY (id));"
         )
 
+    def select_items_by_name(self, name):
+        sql = "SELECT * FROM items WHERE item_name = %s;"
+        val = name
+        self.cursor.execute(sql, val)
+        result = self.cursor.fetchmany(self.fetch_number)
+        return result
+
     def select_from_items(self):
         self.cursor.execute("SELECT * FROM items;")
         result = self.cursor.fetchmany(self.fetch_number)
@@ -24,8 +31,7 @@ class SQL_Base:
     def select_from_runes(self):
         self.cursor.execute("SELECT * FROM runes;")
         result = self.cursor.fetchmany(self.fetch_number)
-        return result
-
+        return result   
 
     def get_tables(self):
         self.cursor.execute("SHOW TABLES;") 

@@ -11,6 +11,7 @@ class Flet_App:
         self.current_status = Status_type.NONE
 
         self.tables_list = list()
+        self.items_list = list()
         self.expected_tables = dict()
         self.items_menu_elems = list()
         self.runes_menu_elems = list()
@@ -59,7 +60,7 @@ class Flet_App:
                 color = "red"
             case _:
                 print(f"Troubles in enum")
-        
+
         self.show_data(page)
 
         page.snack_bar = SnackBar(Text(text, size=30), bgcolor=color)
@@ -109,6 +110,11 @@ class Flet_App:
         page.title = "Main FLET application"
 
         self.tables_list = self.data.get_tables()
+        dirty_items_list = self.data.select_from_items()
+
+        for x in dirty_items_list:            
+            self.items_list.append(x["item_name"])       
+
         for table in self.tables_list:
             if table == "items":
                 self.expected_tables[table] = Table_name.ITEMS
@@ -120,10 +126,22 @@ class Flet_App:
         self.tables_dropdown = Dropdown(
             width=100,
             options=[dropdown.Option(x.title()) for x in self.tables_list],
-        )       
+        )
 
-        self.data_table = DataTable(columns=[], rows=[],)
-        
+        self.items_dropdown = Dropdown(
+            width=300,
+            options=[dropdown.Option(x) for x in self.items_list],
+        )
+
+        self.data_table = DataTable(
+            columns=[],
+            rows=[],
+        )
+
+        def show_chosen_items(e):
+            self.current_table = Table_name.ITEMS_BY_NAME
+            self.show_data(page)
+            
         def save_items_data(e):
             try:
                 match self.current_status:
@@ -186,7 +204,9 @@ class Flet_App:
         )
 
         def show_chosen_table(e):
-            self.current_table = self.expected_tables[self.tables_dropdown.value.lower()] 
+            self.current_table = self.expected_tables[
+                self.tables_dropdown.value.lower()
+            ]
             self.show_data(page)
 
         def add_command(e):
@@ -204,11 +224,14 @@ class Flet_App:
             page.update()
 
         self.insert_button = ElevatedButton("Insert data", on_click=add_command)
+        self.show_items_button = ElevatedButton("Show items", on_click=show_chosen_items)
 
         first_row = Row(
-            [                
+            [
                 self.tables_dropdown,
                 ElevatedButton("Show table", on_click=show_chosen_table),
+                self.items_dropdown,
+                self.show_items_button,
             ]
         )
 
@@ -216,15 +239,15 @@ class Flet_App:
             Column(
                 [
                     first_row,
-                    self.data_table, 
-                    self.insert_button,                  
+                    self.data_table,
+                    self.insert_button,
                 ]
             ),
             self.pop_up_items_menu,
             self.pop_up_runes_menu,
         )
 
-        self.show_data(page)   
+        self.show_data(page)
 
     def clear_fields(self, page: Page):
         self.selected_id = 0
@@ -242,19 +265,27 @@ class Flet_App:
 
         match self.current_table:
             case Table_name.ITEMS:
-                self.show_items_data(page)
+                rows = self.data.select_from_items()
+                self.show_items_data(page, rows)
+            case Table_name.ITEMS_BY_NAME:
+                rows = self.data.select_items_by_name(self.items_dropdown.value)
+                self.show_items_data(page, rows)
             case Table_name.RUNES:
-                self.show_runes_data(page)
+                self.show_runes_data(page)   
             case _:
                 print("Error in show data!")
 
-    def show_items_data(self, page: Page):
+    def show_items_data(self, page: Page, rows):
 
-        rows = self.data.select_from_items()        
-
-        [self.data_table.columns.append(DataColumn(Text(self.items_columns_names[x]))) for x in range(len(self.items_columns_names))]
+        [
+            self.data_table.columns.append(
+                DataColumn(Text(self.items_columns_names[x]))
+            )
+            for x in range(len(self.items_columns_names))
+        ]
 
         self.insert_button.disabled = False
+        self.show_items_button.disabled = False
 
         def delete_command(e):
             print("Selected id is = ", e.control.data["id"])
@@ -319,9 +350,15 @@ class Flet_App:
 
         rows = self.data.select_from_runes()
 
-        [self.data_table.columns.append(DataColumn(Text(self.runes_columns_names[x]))) for x in range(len(self.runes_columns_names))]  
+        [
+            self.data_table.columns.append(
+                DataColumn(Text(self.runes_columns_names[x]))
+            )
+            for x in range(len(self.runes_columns_names))
+        ]
 
         self.insert_button.disabled = True
+        self.show_items_button.disabled = True
 
         def edit_command(e):
             self.current_status = Status_type.UPDATE
@@ -377,4 +414,5 @@ class Status_type(Enum):
 class Table_name(Enum):
     ITEMS = 1
     RUNES = 2
-    NONE = 3
+    ITEMS_BY_NAME = 3
+    NONE = 4
