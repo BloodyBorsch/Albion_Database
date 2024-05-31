@@ -1,13 +1,13 @@
 from flet import *
-from Data_Controller import Data_Base
+from Data_Controller import SQL_Base
 from enum import Enum
 
 
-class Data_Table:
+class Flet_App:
 
-    def __init__(self, db: Data_Base):
+    def __init__(self, db: SQL_Base):
         self.data = db
-        self.default_table = Table_name.RUNES
+        self.current_table = Table_name.ITEMS
         self.current_status = Status_type.NONE
 
         self.tables_list = list()
@@ -59,8 +59,7 @@ class Data_Table:
                 color = "red"
             case _:
                 print(f"Troubles in enum")
-
-        self.items_data_table.rows.clear()
+        
         self.show_data(page)
 
         page.snack_bar = SnackBar(Text(text, size=30), bgcolor=color)
@@ -68,7 +67,6 @@ class Data_Table:
         page.update()
 
     def create_fields(self, page: Page):
-        page.title = "Main FLET application"
 
         self.items_menu_elems.append(
             TextField(hint_text="Enter name of item", width=300)
@@ -108,20 +106,24 @@ class Data_Table:
 
     def create_menus(self, page: Page):
 
+        page.title = "Main FLET application"
+
         self.tables_list = self.data.get_tables()
         for table in self.tables_list:
             if table == "items":
-                self.expected_tables[Table_name.ITEMS] = table
+                self.expected_tables[table] = Table_name.ITEMS
             elif table == "runes":
-                self.expected_tables[Table_name.RUNES] = table
+                self.expected_tables[table] = Table_name.RUNES
             else:
                 print("can't get table")
 
         self.tables_dropdown = Dropdown(
             width=100,
             options=[dropdown.Option(x.title()) for x in self.tables_list],
-        )        
+        )       
 
+        self.data_table = DataTable(columns=[], rows=[],)
+        
         def save_items_data(e):
             try:
                 match self.current_status:
@@ -130,7 +132,7 @@ class Data_Table:
                         self.show_status(page, Status_type.INSERT)
                     case Status_type.UPDATE:
                         self.data.update_items_data(
-                            self.items_menu_elems[0].value.title(),
+                            self.items_menu_elems[0].value,
                             self.items_menu_elems[1].value,
                             self.items_menu_elems[2].value,
                             self.items_menu_elems[3].value,
@@ -150,10 +152,16 @@ class Data_Table:
                 print(e)
                 print("Got error save_items_data!")
 
+        self.pop_up_items_menu = AlertDialog(
+            title=Text("Edit menu"),
+            content=Column(self.items_menu_elems),
+            actions=[TextButton("Save", on_click=save_items_data)],
+        )
+
         def save_runes_data(e):
             try:
                 self.data.update_runes_data(
-                    self.runes_menu_elems[0].value.title(),
+                    self.runes_menu_elems[0].value,
                     self.runes_menu_elems[1].value,
                     self.runes_menu_elems[2].value,
                     self.runes_menu_elems[3].value,
@@ -171,42 +179,15 @@ class Data_Table:
                 print(e)
                 print("Got error save_runes_data!")
 
-
-        self.pop_up_items_menu = AlertDialog(
-            title=Text("Edit menu"),
-            content=Column(self.items_menu_elems),
-            actions=[TextButton("Save", on_click=save_items_data)],
-        )
-
         self.pop_up_runes_menu = AlertDialog(
             title=Text("Edit menu"),
             content=Column(self.runes_menu_elems),
             actions=[TextButton("Save", on_click=save_runes_data)],
         )
-        
-        self.show_data(page)
 
-    def clear_fields(self, page: Page):
-        self.selected_id = 0
-
-        for menu in self.items_menu_elems:
-            menu.value = ""
-
-        for menu in self.runes_menu_elems:
-            menu.value = ""
-
-    def show_data(self, page: Page):
-        match self.default_table:
-            case Table_name.ITEMS:
-                self.show_items_data(page)
-            case Table_name.RUNES:
-                self.show_runes_data(page)
-            case _:
-                print("Error in show data!")
-
-    def show_items_data(self, page: Page):
-
-        rows = self.data.select_from_items()
+        def show_chosen_table(e):
+            self.current_table = self.expected_tables[self.tables_dropdown.value.lower()] 
+            self.show_data(page)
 
         def add_command(e):
             self.current_status = Status_type.INSERT
@@ -222,24 +203,12 @@ class Data_Table:
 
             page.update()
 
-        self.items_data_table = DataTable(              ### TODO разнести по методам отображение данных
-            columns=[
-                DataColumn(Text(self.items_columns_names[0])),
-                DataColumn(Text(self.items_columns_names[1])),
-                DataColumn(Text(self.items_columns_names[2])),
-                DataColumn(Text(self.items_columns_names[3])),
-                DataColumn(Text(self.items_columns_names[4])),
-                DataColumn(Text(self.items_columns_names[5])),
-                DataColumn(Text(self.items_columns_names[6])),
-                DataColumn(Text(self.items_columns_names[7])),
-            ],
-            rows=[],
-        )
+        self.insert_button = ElevatedButton("Insert data", on_click=add_command)
 
         first_row = Row(
-            [
-                ElevatedButton("Insert data", on_click=add_command),
+            [                
                 self.tables_dropdown,
+                ElevatedButton("Show table", on_click=show_chosen_table),
             ]
         )
 
@@ -247,11 +216,45 @@ class Data_Table:
             Column(
                 [
                     first_row,
-                    self.items_data_table,
+                    self.data_table, 
+                    self.insert_button,                  
                 ]
             ),
             self.pop_up_items_menu,
-        )        
+            self.pop_up_runes_menu,
+        )
+
+        self.show_data(page)   
+
+    def clear_fields(self, page: Page):
+        self.selected_id = 0
+
+        for menu in self.items_menu_elems:
+            menu.value = ""
+
+        for menu in self.runes_menu_elems:
+            menu.value = ""
+
+    def show_data(self, page: Page):
+
+        self.data_table.rows.clear()
+        self.data_table.columns.clear()
+
+        match self.current_table:
+            case Table_name.ITEMS:
+                self.show_items_data(page)
+            case Table_name.RUNES:
+                self.show_runes_data(page)
+            case _:
+                print("Error in show data!")
+
+    def show_items_data(self, page: Page):
+
+        rows = self.data.select_from_items()        
+
+        [self.data_table.columns.append(DataColumn(Text(self.items_columns_names[x]))) for x in range(len(self.items_columns_names))]
+
+        self.insert_button.disabled = False
 
         def delete_command(e):
             print("Selected id is = ", e.control.data["id"])
@@ -278,7 +281,7 @@ class Data_Table:
             page.update()
 
         for row in rows:
-            self.items_data_table.rows.append(
+            self.data_table.rows.append(
                 DataRow(
                     cells=[
                         DataCell(Text(row["id"])),
@@ -316,35 +319,9 @@ class Data_Table:
 
         rows = self.data.select_from_runes()
 
-        self.items_data_table = DataTable(
-            columns=[
-                DataColumn(Text(self.runes_columns_names[0])),
-                DataColumn(Text(self.runes_columns_names[1])),
-                DataColumn(Text(self.runes_columns_names[2])),
-                DataColumn(Text(self.runes_columns_names[3])),
-                DataColumn(Text(self.runes_columns_names[4])),
-                DataColumn(Text(self.runes_columns_names[5])),
-                DataColumn(Text(self.runes_columns_names[6])),
-                DataColumn(Text(self.runes_columns_names[7])),
-            ],
-            rows=[],
-        )
+        [self.data_table.columns.append(DataColumn(Text(self.runes_columns_names[x]))) for x in range(len(self.runes_columns_names))]  
 
-        first_row = Row(
-            [                
-                self.tables_dropdown,
-            ]
-        )
-
-        page.add(
-            Column(
-                [
-                    first_row,
-                    self.items_data_table,
-                ]
-            ),
-            self.pop_up_runes_menu,
-        )        
+        self.insert_button.disabled = True
 
         def edit_command(e):
             self.current_status = Status_type.UPDATE
@@ -361,7 +338,7 @@ class Data_Table:
             page.update()
 
         for row in rows:
-            self.items_data_table.rows.append(
+            self.data_table.rows.append(
                 DataRow(
                     cells=[
                         DataCell(Text(row["id"])),

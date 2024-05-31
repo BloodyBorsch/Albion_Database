@@ -1,7 +1,7 @@
 import pymysql
 
 
-class Data_Base:
+class SQL_Base:
 
     def __init__(self, connector: pymysql.connections.Connection):
         self.connection = connector
@@ -46,13 +46,13 @@ class Data_Base:
 
     def update_items_data(self, name, tier, price_s, price_2, price_3, count, id):
         sql = "UPDATE items SET item_name = %s, Tier = %s, Start_price = %s, Price_2 = %s, Price_3 = %s, Runes_count = %s WHERE id = %s;"
-        val = (name, tier, price_s, price_2, price_3, count, id)
+        val = (name.title(), tier, price_s, price_2, price_3, count, id)
         self.cursor.execute(sql, val)
         self.connection.commit()   
 
     def update_runes_data(self, name, tier4, tier5, tier6, tier7, tier8, id):
         sql = "UPDATE runes SET rune_name = %s, Tier4_price = %s, Tier5_price = %s, Tier6_price = %s, Tier7_price = %s, Tier8_price = %s WHERE id = %s;"
-        val = (name, tier4, tier5, tier6, tier7, tier8, id)
+        val = (name.title(), tier4, tier5, tier6, tier7, tier8, id)
         self.cursor.execute(sql, val)
         self.connection.commit()       
 

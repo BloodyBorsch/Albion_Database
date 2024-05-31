@@ -1,12 +1,12 @@
 import time
 import flet as ft
-from Data_Controller import Data_Base
+from Data_Controller import SQL_Base
 from Interface_functions import print_info
 
 
 class Data_Table_OLD:
 
-    def __init__(self, db: Data_Base):
+    def __init__(self, db: SQL_Base):
         self.data = db
         self.tables_list = list()
         ft.app(self.create_table)
