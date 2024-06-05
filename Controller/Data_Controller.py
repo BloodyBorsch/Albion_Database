@@ -8,7 +8,7 @@ class SQL_Base:
         self.cursor = connector.cursor()
         self.fetch_number = 10
 
-    def select_items_by_name(self, name):
+    def get_items_by_name(self, name):
         sql = "SELECT * FROM items WHERE item_name = %s;"
         val = name
         self.cursor.execute(sql, val)
@@ -25,7 +25,7 @@ class SQL_Base:
         result = self.cursor.fetchall()
         return result
 
-    def select_from_runes(self):
+    def get_runes(self):
         self.cursor.execute("SELECT * FROM runes;")
         result = self.cursor.fetchmany(self.fetch_number)
         return result

@@ -49,24 +49,16 @@ class Interface_application:
                 self.create_menus(page)
                 self.current_status = Status_type.WAITING
                 self.current_table = Table_name.ITEMS
-                self.step_forward(page) 
+                self.step_forward(page)
             case Status_type.WAITING:
-                self.renew_dropdown()
+                self.renew_dropdown(page)
                 self.show_data(page)
-            case Status_type.INSERT:                
-                self.show_status(page)
-                self.current_status = Status_type.WAITING
-                self.step_forward(page)
-            case Status_type.UPDATE:
-                pass
-            case Status_type.DELETE:
-                self.show_status(page)
-                self.current_status = Status_type.WAITING
-                self.step_forward(page)
             case _:
-                pass         
+                self.show_status(page)
+                self.current_status = Status_type.WAITING
+                self.step_forward(page)
 
-    def show_status(self, page: Page):        
+    def show_status(self, page: Page):
 
         match self.current_status:
             case Status_type.INSERT:
@@ -123,15 +115,43 @@ class Interface_application:
             TextField(hint_text="Enter tier 8 price", width=300)
         )
 
-    def renew_dropdown(self):
+    def renew_dropdown(self, page: Page):
+
+        self.clear_fields(page)
 
         dirty_items_list = self.data.get_all_items()
 
         for x in dirty_items_list:
-            self.items_list.append(x["item_name"])
+            if x["item_name"].title() not in self.items_list:
+                self.items_list.append(x["item_name"].title())
 
-        self.tables_dropdown.options = [dropdown.Option(x.title()) for x in self.tables_list]
-        self.items_dropdown.options = [dropdown.Option(x) for x in self.items_list]
+        self.tables_dropdown.options = [
+            dropdown.Option(x.title()) for x in self.tables_list
+        ]
+
+        [
+            self.items_dropdown.options.append(dropdown.Option(x))
+            for x in self.items_list
+        ]
+
+        page.update()
+
+    def clear_fields(self, page: Page):
+        self.data_table.rows.clear()
+        self.data_table.columns.clear()
+        self.items_list.clear()
+        self.tables_dropdown.options.clear()
+        self.items_dropdown.options.clear()
+
+        self.selected_id = 0
+
+        for menu in self.items_menu_elems:
+            menu.value = ""
+
+        for menu in self.runes_menu_elems:
+            menu.value = ""
+
+        page.update()
 
     def create_menus(self, page: Page):
 
@@ -145,7 +165,7 @@ class Interface_application:
             elif table == "runes":
                 self.expected_tables[table] = Table_name.RUNES
             else:
-                print("ошибка в get table!")  
+                print("ошибка в get table!")
 
         self.tables_dropdown = Dropdown(
             width=100,
@@ -155,26 +175,45 @@ class Interface_application:
         self.items_dropdown = Dropdown(
             width=300,
             options=[],
-        )        
+        )
 
         self.data_table = DataTable(
             columns=[],
             rows=[],
-        )        
+        )
 
-        def save_items_data(e):
+        def save_data(e):
             try:
-                match self.current_status:
-                    case Status_type.INSERT:   
-                        self.data.insert_data(list_parser(self.items_menu_elems))                        
-                    case Status_type.UPDATE:   
-                        self.data.update_items_data(list_parser(self.items_menu_elems, self.selected_id))                        
+                match self.current_table:
+                    case Table_name.ITEMS:
+                        match self.current_status:
+                            case Status_type.INSERT:
+                                self.data.insert_data(
+                                    list_parser(self.items_menu_elems)
+                                )
+                            case Status_type.UPDATE:
+                                self.data.update_items_data(
+                                    list_parser(self.items_menu_elems, self.selected_id)
+                                )
+                            case _:
+                                print("Error in case save_items_data")
+                    case Table_name.ITEMS_BY_NAME:
+                        match self.current_status:
+                            case Status_type.UPDATE:
+                                self.data.update_items_data(
+                                    list_parser(self.items_menu_elems, self.selected_id)
+                                )
+                    case Table_name.RUNES:
+                        temp_list = list()
+                        [temp_list.append(x.value) for x in self.runes_menu_elems]
+                        temp_list.append(self.selected_id)
+                        self.data.update_runes_data(temp_list)
                     case _:
-                        print("Error in case save_items_data")
+                        print("Error in case save_runes_data")
 
                 self.pop_up_items_menu.open = False
+                self.pop_up_runes_menu.open = False
                 page.update()
-                self.clear_fields(page)
                 self.step_forward(page)
 
             except Exception as e:
@@ -182,33 +221,16 @@ class Interface_application:
                 print("Got error save_items_data!")
 
         self.pop_up_items_menu = AlertDialog(
-            title=Text("Edit menu"),
+            title=Text("Edit items menu"),
             content=Column(self.items_menu_elems),
-            actions=[TextButton("Save", on_click=save_items_data)],
+            actions=[TextButton("Save", on_click=save_data)],
         )
 
-        def save_runes_data(e):
-            try:
-                temp_list = list()
-                [temp_list.append(x.value) for x in self.runes_menu_elems]
-                temp_list.append(self.selected_id)
-
-                self.data.update_runes_data(temp_list)
-                self.show_status(page, Status_type.UPDATE)
-
-                self.pop_up_runes_menu.open = False
-                page.update()
-                self.clear_fields(page)
-
-            except Exception as e:
-                print(e)
-                print("Got error save_runes_data!")
-
         self.pop_up_runes_menu = AlertDialog(
-            title=Text("Edit menu"),
+            title=Text("Edit runes menu"),
             content=Column(self.runes_menu_elems),
-            actions=[TextButton("Save", on_click=save_runes_data)],
-        )        
+            actions=[TextButton("Save", on_click=save_data)],
+        )
 
         def add_command(e):
             self.current_status = Status_type.INSERT
@@ -224,11 +246,12 @@ class Interface_application:
 
             page.update()
 
-        self.insert_button = ElevatedButton("Insert data", on_click=add_command)               
+        self.insert_button = ElevatedButton("Insert data", on_click=add_command)
 
         def show_chosen_items(e):
             self.current_table = Table_name.ITEMS_BY_NAME
-            self.show_data(page)
+            self.current_status = Status_type.WAITING
+            self.step_forward(page)
 
         self.show_items_button = ElevatedButton(
             "Show items", on_click=show_chosen_items
@@ -238,7 +261,8 @@ class Interface_application:
             self.current_table = self.expected_tables[
                 self.tables_dropdown.value.lower()
             ]
-            self.show_data(page)
+            self.current_status = Status_type.WAITING
+            self.step_forward(page)
 
         first_row = Row(
             [
@@ -259,21 +283,7 @@ class Interface_application:
             ),
             self.pop_up_items_menu,
             self.pop_up_runes_menu,
-        )        
-
-    def clear_fields(self, page: Page):
-        self.data_table.rows.clear()
-        self.data_table.columns.clear()
-        self.tables_dropdown.options.clear()
-        self.items_dropdown.options.clear()
-
-        self.selected_id = 0
-
-        for menu in self.items_menu_elems:
-            menu.value = ""
-
-        for menu in self.runes_menu_elems:
-            menu.value = ""
+        )
 
     def show_data(self, page: Page):
 
@@ -282,10 +292,11 @@ class Interface_application:
                 rows = self.data.get_items()
                 self.show_items_data(page, rows)
             case Table_name.ITEMS_BY_NAME:
-                rows = self.data.select_items_by_name(self.items_dropdown.value)
+                rows = self.data.get_items_by_name(self.items_dropdown.value)
                 self.show_items_data(page, rows)
             case Table_name.RUNES:
-                self.show_runes_data(page)
+                rows = self.data.get_runes()
+                self.show_runes_data(page, rows)
             case _:
                 print("Error in show data!")
 
@@ -361,9 +372,7 @@ class Interface_application:
 
         page.update()
 
-    def show_runes_data(self, page: Page):
-
-        rows = self.data.select_from_runes()
+    def show_runes_data(self, page: Page, rows):
 
         [
             self.data_table.columns.append(
@@ -424,8 +433,9 @@ class Status_type(Enum):
     UPDATE = 2
     DELETE = 3
     WAITING = 4
-    START = 5    
+    START = 5
     NONE = 6
+
 
 class Table_name(Enum):
     ITEMS = 1
