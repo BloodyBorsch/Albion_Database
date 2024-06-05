@@ -1,14 +1,15 @@
 from flet import *
 from Data_Controller import SQL_Base
+from Main_functions import list_parser
 from enum import Enum
 
 
-class Flet_App:
+class Interface_application:
 
     def __init__(self, db: SQL_Base):
         self.data = db
-        self.current_table = Table_name.ITEMS
-        self.current_status = Status_type.NONE
+        self.current_table = Table_name.NONE
+        self.current_status = Status_type.START
 
         self.tables_list = list()
         self.items_list = list()
@@ -38,17 +39,36 @@ class Flet_App:
             "Actions",
         ]
 
-        app(self.start)
+        app(self.step_forward)
 
-    def start(self, page: Page):
+    def step_forward(self, page: Page):
 
-        self.create_fields(page)
-        self.create_menus(page)
+        match self.current_status:
+            case Status_type.START:
+                self.create_fields(page)
+                self.create_menus(page)
+                self.current_status = Status_type.WAITING
+                self.current_table = Table_name.ITEMS
+                self.step_forward(page) 
+            case Status_type.WAITING:
+                self.renew_dropdown()
+                self.show_data(page)
+            case Status_type.INSERT:                
+                self.show_status(page)
+                self.current_status = Status_type.WAITING
+                self.step_forward(page)
+            case Status_type.UPDATE:
+                pass
+            case Status_type.DELETE:
+                self.show_status(page)
+                self.current_status = Status_type.WAITING
+                self.step_forward(page)
+            case _:
+                pass         
 
-    def show_status(self, page: Page, status):
-        text, color = "", ""
+    def show_status(self, page: Page):        
 
-        match status:
+        match self.current_status:
             case Status_type.INSERT:
                 text = "Success added"
                 color = "green"
@@ -60,8 +80,6 @@ class Flet_App:
                 color = "red"
             case _:
                 print(f"Troubles in enum")
-
-        self.show_data(page)
 
         page.snack_bar = SnackBar(Text(text, size=30), bgcolor=color)
         page.snack_bar.open = True
@@ -105,15 +123,21 @@ class Flet_App:
             TextField(hint_text="Enter tier 8 price", width=300)
         )
 
+    def renew_dropdown(self):
+
+        dirty_items_list = self.data.get_all_items()
+
+        for x in dirty_items_list:
+            self.items_list.append(x["item_name"])
+
+        self.tables_dropdown.options = [dropdown.Option(x.title()) for x in self.tables_list]
+        self.items_dropdown.options = [dropdown.Option(x) for x in self.items_list]
+
     def create_menus(self, page: Page):
 
         page.title = "Albion market data"
 
         self.tables_list = self.data.get_tables()
-        dirty_items_list = self.data.get_items()
-
-        for x in dirty_items_list:
-            self.items_list.append(x["item_name"])
 
         for table in self.tables_list:
             if table == "items":
@@ -121,50 +145,37 @@ class Flet_App:
             elif table == "runes":
                 self.expected_tables[table] = Table_name.RUNES
             else:
-                print("can't get table")
+                print("ошибка в get table!")  
 
         self.tables_dropdown = Dropdown(
             width=100,
-            options=[dropdown.Option(x.title()) for x in self.tables_list],
+            options=[],
         )
 
         self.items_dropdown = Dropdown(
             width=300,
-            options=[dropdown.Option(x) for x in self.items_list],
-        )
+            options=[],
+        )        
 
         self.data_table = DataTable(
             columns=[],
             rows=[],
-        )
-
-        def show_chosen_items(e):
-            self.current_table = Table_name.ITEMS_BY_NAME
-            self.show_data(page)
+        )        
 
         def save_items_data(e):
             try:
                 match self.current_status:
-                    case Status_type.INSERT:
-                        self.data.insert_data(self.items_menu_elems)
-                        self.show_status(page, Status_type.INSERT)
-                    case Status_type.UPDATE:                        
-                        self.data.update_items_data(
-                            self.items_menu_elems[0].value,
-                            self.items_menu_elems[1].value,
-                            self.items_menu_elems[2].value,
-                            self.items_menu_elems[3].value,
-                            self.items_menu_elems[4].value,
-                            self.items_menu_elems[5].value,
-                            self.selected_id,
-                        )
-                        self.show_status(page, Status_type.UPDATE)
+                    case Status_type.INSERT:   
+                        self.data.insert_data(list_parser(self.items_menu_elems))                        
+                    case Status_type.UPDATE:   
+                        self.data.update_items_data(list_parser(self.items_menu_elems, self.selected_id))                        
                     case _:
                         print("Error in case save_items_data")
 
                 self.pop_up_items_menu.open = False
                 page.update()
                 self.clear_fields(page)
+                self.step_forward(page)
 
             except Exception as e:
                 print(e)
@@ -178,15 +189,11 @@ class Flet_App:
 
         def save_runes_data(e):
             try:
-                self.data.update_runes_data(
-                    self.runes_menu_elems[0].value,
-                    self.runes_menu_elems[1].value,
-                    self.runes_menu_elems[2].value,
-                    self.runes_menu_elems[3].value,
-                    self.runes_menu_elems[4].value,
-                    self.runes_menu_elems[5].value,
-                    self.selected_id,
-                )
+                temp_list = list()
+                [temp_list.append(x.value) for x in self.runes_menu_elems]
+                temp_list.append(self.selected_id)
+
+                self.data.update_runes_data(temp_list)
                 self.show_status(page, Status_type.UPDATE)
 
                 self.pop_up_runes_menu.open = False
@@ -201,13 +208,7 @@ class Flet_App:
             title=Text("Edit menu"),
             content=Column(self.runes_menu_elems),
             actions=[TextButton("Save", on_click=save_runes_data)],
-        )
-
-        def show_chosen_table(e):
-            self.current_table = self.expected_tables[
-                self.tables_dropdown.value.lower()
-            ]
-            self.show_data(page)
+        )        
 
         def add_command(e):
             self.current_status = Status_type.INSERT
@@ -223,10 +224,21 @@ class Flet_App:
 
             page.update()
 
-        self.insert_button = ElevatedButton("Insert data", on_click=add_command)
+        self.insert_button = ElevatedButton("Insert data", on_click=add_command)               
+
+        def show_chosen_items(e):
+            self.current_table = Table_name.ITEMS_BY_NAME
+            self.show_data(page)
+
         self.show_items_button = ElevatedButton(
             "Show items", on_click=show_chosen_items
         )
+
+        def show_chosen_table(e):
+            self.current_table = self.expected_tables[
+                self.tables_dropdown.value.lower()
+            ]
+            self.show_data(page)
 
         first_row = Row(
             [
@@ -247,11 +259,14 @@ class Flet_App:
             ),
             self.pop_up_items_menu,
             self.pop_up_runes_menu,
-        )
-
-        self.show_data(page)
+        )        
 
     def clear_fields(self, page: Page):
+        self.data_table.rows.clear()
+        self.data_table.columns.clear()
+        self.tables_dropdown.options.clear()
+        self.items_dropdown.options.clear()
+
         self.selected_id = 0
 
         for menu in self.items_menu_elems:
@@ -261,9 +276,6 @@ class Flet_App:
             menu.value = ""
 
     def show_data(self, page: Page):
-
-        self.data_table.rows.clear()  ### не корректно выгружаются предеты в список
-        self.data_table.columns.clear()
 
         match self.current_table:
             case Table_name.ITEMS:
@@ -290,14 +302,15 @@ class Flet_App:
         self.show_items_button.disabled = False
 
         def delete_command(e):
-            print("Selected id is = ", e.control.data["id"])
+            self.current_status = Status_type.DELETE
+
             self.selected_id = e.control.data["id"]
             try:
                 self.data.delete_data(self.selected_id)
-                self.show_status(page, Status_type.DELETE)
+                self.step_forward(page)
             except Exception as e:
                 print(e)
-                print("Got error delete_command!")
+                print("Ошибка удаления")
 
         def edit_command(e):
             self.current_status = Status_type.UPDATE
@@ -410,8 +423,9 @@ class Status_type(Enum):
     INSERT = 1
     UPDATE = 2
     DELETE = 3
-    NONE = 4
-
+    WAITING = 4
+    START = 5    
+    NONE = 6
 
 class Table_name(Enum):
     ITEMS = 1
